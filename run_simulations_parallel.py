@@ -154,5 +154,5 @@ def main():
 
 if __name__ == "__main__":
     # Important for macOS: this guard is required for multiprocessing
-    # python run_simulations_parallel.py /Users/dhianeifar/Desktop/CPM/train/ /Users/dhianeifar/Desktop/CPM/collected --workers 10
+    # python run_simulations_parallel.py "C:\Users\dhian\PycharmProjects\GenCPM\dataset\carla_dataset"  "C:\Users\dhian\PycharmProjects\GenCPM\dataset\CPM" --workers 10
     main()

@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from cpm_builder import build_cpm, load_yaml, save_yaml
-from attack import create_attack, AttackContext, Attack
+from attacks import create_attack, AttackContext, Attack
 from tqdm import tqdm
 
 
