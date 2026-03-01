@@ -25,12 +25,13 @@ Skeleton:
 """
 
 import argparse
+import copy
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from cpm_builder import build_cpm, load_yaml, save_yaml
+from utils import load_yaml, save_yaml
 from attacks import create_attack, AttackContext, Attack
 from tqdm import tqdm
 
@@ -63,6 +64,16 @@ class AttackScheduler:
             for iv in intervals
             if iv.start_ts <= timestamp <= iv.end_ts
         ]
+
+
+def _pick_single_attack(active_attacks: List[AttackInterval]) -> Optional[AttackInterval]:
+    if not active_attacks:
+        return None
+    # Deterministic tie-break: latest start_ts wins, then lexical attack type.
+    return sorted(
+        active_attacks,
+        key=lambda iv: (iv.start_ts, iv.attack_type),
+    )[-1]
 
 
 # ----------------------------------------------------------------------
@@ -110,55 +121,38 @@ def generate_poisson_intervals_for_vehicle(
         params: Dict[str, Any] = {}
         
         if attack_type == "DriftAttack":
-            mean_step = random.uniform(0.03, 0.07)  # m per frame
-            std_step = random.uniform(0.01, 0.03)   # m per frame
-            yaw_mean = random.uniform(-0.5, 0.5)    # deg per frame
-            yaw_std = random.uniform(0.0, 0.3)      # deg per frame
-
             params = {
-                "mean_step": mean_step,
-                "std_step": std_step,
-                "yaw_step_mean": yaw_mean,
-                "yaw_step_std": yaw_std
+                "mean_step": 2.0,
+                "std_step": 0.8,
+                "yaw_step_mean": 10.0,
+                "yaw_step_std": 5.0,
+                "num_targets": 10000,
             }
             
         elif attack_type == "AddObjectAttack":
-            num_objects = random.randint(7, 10)
-            r_min = random.uniform(5.0, 10.0)
-            r_max = random.uniform(15.0, 25.0)
-            z_offset = random.uniform(-0.5, 0.5)
-            
             params = {
-                "num_objects": num_objects,
-                "radius_range": (r_min, r_max),
-                "z_offset": z_offset
+                "num_objects": 25,
+                "radius_range": (2.0, 40.0),
+                "z_offset": 0.0,
             }
             
         elif attack_type == "RemoveObjectAttack":
-            # target_ids will be determined dynamically when applying the attack
             params = {
-                "target_ids": None  # Will be populated during attack application
+                "max_remove_fraction": 0.95,
+                "max_remove_count": 10000,
             }
             
         elif attack_type == "WhiteNoiseAttack":
-            mean_drift = random.uniform(0.3, 0.7)
-            std_drift = random.uniform(0.1, 0.3)
-            z_mean = random.uniform(-0.05, 0.05)
-            z_std = random.uniform(0.02, 0.08)
-            yaw_mean = random.uniform(-2.0, 2.0)
-            yaw_std = random.uniform(3.0, 7.0)
-            pitch_mean = random.uniform(-1.0, 1.0)
-            pitch_std = random.uniform(1.0, 3.0)
-            
             params = {
-                "mean_drift": mean_drift,
-                "std_drift": std_drift,
-                "z_drift_mean": z_mean,
-                "z_drift_std": z_std,
-                "yaw_drift_mean": yaw_mean,
-                "yaw_drift_std": yaw_std,
-                "pitch_drift_mean": pitch_mean,
-                "pitch_drift_std": pitch_std
+                "mean_drift": 3.0,
+                "std_drift": 1.5,
+                "z_drift_mean": 0.0,
+                "z_drift_std": 0.5,
+                "yaw_drift_mean": 15.0,
+                "yaw_drift_std": 8.0,
+                "pitch_drift_mean": 5.0,
+                "pitch_drift_std": 3.0,
+                "num_targets": 10000,
             }
 
         intervals.append(
@@ -201,6 +195,152 @@ def build_random_schedule_for_all_vehicles(
     return intervals_per_vehicle
 
 
+def parse_timestamp_from_preds_filename(path: Path) -> int:
+    name = path.name
+    suffix = "_preds.yaml"
+    if not name.endswith(suffix):
+        raise ValueError(f"Unexpected preds filename format: {name}")
+    return int(name[: -len(suffix)])
+
+
+def list_preds_paths(vehicle_dir: Path) -> List[Path]:
+    return sorted(
+        [p for p in vehicle_dir.glob("*_preds.yaml") if p.is_file()],
+        key=parse_timestamp_from_preds_filename,
+    )
+
+
+def _to_float3(value: Any, default: Tuple[float, float, float]) -> Tuple[float, float, float]:
+    if isinstance(value, dict):
+        return (
+            float(value.get("x", default[0])),
+            float(value.get("y", default[1])),
+            float(value.get("z", default[2])),
+        )
+    if isinstance(value, list):
+        padded = (value + [default[0], default[1], default[2]])[:3]
+        return float(padded[0]), float(padded[1]), float(padded[2])
+    return default
+
+
+def extract_detected_vehicles_from_preds(frame: Dict[str, Any]) -> List[Dict[str, Any]]:
+    detected = frame.get("detected_objects", {})
+    if not isinstance(detected, dict):
+        return []
+
+    vehicles: List[Dict[str, Any]] = []
+    for key, obj in detected.items():
+        if not isinstance(obj, dict):
+            continue
+        vid = obj.get("id", obj.get("object_id", key))
+        try:
+            vid = int(str(vid))
+        except ValueError:
+            vid = str(vid)
+
+        lx, ly, lz = _to_float3(obj.get("location"), (0.0, 0.0, 0.0))
+        cx, cy, cz = _to_float3(obj.get("center"), (lx, ly, lz))
+        ex, ey, ez = _to_float3(obj.get("extent"), (2.0, 1.0, 1.0))
+        pitch, yaw, roll = _to_float3(obj.get("angle"), (0.0, 0.0, 0.0))
+        if "orientation" in obj:
+            pitch, yaw, roll = _to_float3(obj.get("orientation"), (pitch, yaw, roll))
+
+        speed_raw = obj.get("speed", 0.0)
+        if isinstance(speed_raw, list):
+            speed = float(speed_raw[0]) if speed_raw else 0.0
+        else:
+            speed = float(speed_raw)
+
+        vehicles.append(
+            {
+                "id": vid,
+                "location": {"x": lx, "y": ly, "z": lz},
+                "center": {"x": cx, "y": cy, "z": cz},
+                "extent": {"x": ex, "y": ey, "z": ez},
+                "orientation": {"pitch": pitch, "yaw": yaw, "roll": roll},
+                "speed": speed,
+            }
+        )
+
+    return vehicles
+
+
+def build_cpm_from_preds_frame(frame: Dict[str, Any], vehicle_id: str, timestamp: int, cpm_type: str) -> Dict[str, Any]:
+    lidar_pose = frame.get("lidar_pose", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    ego_speed = float(frame.get("ego_speed", 0.0))
+    detected_vehicles = extract_detected_vehicles_from_preds(frame)
+
+    return {
+        "vehicle_id": vehicle_id,
+        "timestamp": timestamp,
+        "vehicle_speed": ego_speed,
+        "global_position": {
+            "x": float(lidar_pose[0]) if len(lidar_pose) > 0 else 0.0,
+            "y": float(lidar_pose[1]) if len(lidar_pose) > 1 else 0.0,
+            "z": float(lidar_pose[2]) if len(lidar_pose) > 2 else 0.0,
+        },
+        "detected_vehicles": detected_vehicles,
+        "detected_objects": {},
+        "detected_pedestrians": [],
+        "cpm_type": cpm_type,
+        "attacks": [],
+        "source_file_type": "_preds.yaml",
+        "source_field": "detected_objects",
+    }
+
+
+def vehicles_to_detected_objects(vehicles: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    detected_objects: Dict[str, Dict[str, Any]] = {}
+    for vehicle in vehicles:
+        vid = vehicle.get("id")
+        vid_str = str(vid)
+        loc = vehicle.get("location", {})
+        ori = vehicle.get("orientation", {})
+        center = vehicle.get("center", loc)
+        extent = vehicle.get("extent", {"x": 2.0, "y": 1.0, "z": 1.0})
+        if isinstance(center, dict):
+            center_out = [
+                float(center.get("x", 0.0)),
+                float(center.get("y", 0.0)),
+                float(center.get("z", 0.0)),
+            ]
+        elif isinstance(center, list):
+            center_pad = (center + [0.0, 0.0, 0.0])[:3]
+            center_out = [float(center_pad[0]), float(center_pad[1]), float(center_pad[2])]
+        else:
+            center_out = [0.0, 0.0, 0.0]
+
+        if isinstance(extent, dict):
+            extent_out = [
+                float(extent.get("x", 2.0)),
+                float(extent.get("y", 1.0)),
+                float(extent.get("z", 1.0)),
+            ]
+        elif isinstance(extent, list):
+            extent_pad = (extent + [2.0, 1.0, 1.0])[:3]
+            extent_out = [float(extent_pad[0]), float(extent_pad[1]), float(extent_pad[2])]
+        else:
+            extent_out = [2.0, 1.0, 1.0]
+
+        detected_objects[vid_str] = {
+            "angle": [
+                float(ori.get("pitch", 0.0)),
+                float(ori.get("yaw", 0.0)),
+                float(ori.get("roll", 0.0)),
+            ],
+            "center": center_out,
+            "extent": extent_out,
+            "location": [
+                float(loc.get("x", 0.0)),
+                float(loc.get("y", 0.0)),
+                float(loc.get("z", 0.0)),
+            ],
+            "speed": float(vehicle.get("speed", 0.0)),
+        }
+
+    return detected_objects
+
+
 # ----------------------------------------------------------------------
 # Attack application
 # ----------------------------------------------------------------------
@@ -212,45 +352,31 @@ def apply_attacks_to_cpm(
     active_attacks: List[AttackInterval],
 ) -> Dict[str, Any]:
     """
-    Given a benign CPM and the list of active attacks, return a modified CPM.
+    Given a benign CPM and active intervals, apply at most one attack.
 
-    - Reuses the same attack_obj instance across frames within an interval,
-      so stateful attacks (e.g., DriftAttack) can accumulate effects.
-    - For RemoveObjectAttack, dynamically select target_ids from detected_vehicles.
+    - Reuses the same attack_obj instance across frames within an interval.
+    - Enforces single-attack-per-CPM even if intervals overlap.
+    - Forces AddObjectAttack chaos mode by replacing existing detections.
     """
-    if not active_attacks:
+    selected_attack = _pick_single_attack(active_attacks)
+    if selected_attack is None:
         cpm["cpm_type"] = "benign"
         cpm["attacks"] = []
         return cpm
 
     cpm["cpm_type"] = "malicious"
-    cpm_attacks: List[Dict[str, Any]] = []
-
     ctx = AttackContext(vehicle_id=str(vehicle_id), timestamp=timestamp)
+    if selected_attack.attack_type == "AddObjectAttack":
+        # Force AddObjectAttack chaos mode: replace current detections.
+        cpm["detected_vehicles"] = []
 
-    for interval in active_attacks:
-        # Handle RemoveObjectAttack target_ids dynamically
-        if interval.attack_type == "RemoveObjectAttack" and interval.params.get("target_ids") is None:
-            detected_vehicles = cpm.get("detected_vehicles", [])
-            if detected_vehicles:
-                # Randomly select 1 to min(3, total) vehicles to remove
-                num_to_remove = random.randint(1, min(3, len(detected_vehicles)))
-                target_ids = random.sample(range(len(detected_vehicles)), num_to_remove)
-                interval.params["target_ids"] = target_ids
-            else:
-                interval.params["target_ids"] = []
-        
-        # create once, reuse later
-        if interval.attack_obj is None:
-            interval.attack_obj = create_attack(interval.attack_type, interval.params)
+    if selected_attack.attack_obj is None:
+        selected_attack.attack_obj = create_attack(selected_attack.attack_type, selected_attack.params)
 
-        attack = interval.attack_obj
-        meta = attack.apply(cpm, ctx)
-        meta["vehicle_id"] = vehicle_id
-        meta["timestamp"] = timestamp
-        cpm_attacks.append(meta)
-
-    cpm["attacks"] = cpm_attacks
+    meta = selected_attack.attack_obj.apply(cpm, ctx)
+    meta["vehicle_id"] = vehicle_id
+    meta["timestamp"] = timestamp
+    cpm["attacks"] = [meta]
     return cpm
 
 
@@ -258,25 +384,18 @@ def apply_attacks_to_cpm(
 # Simulation traversal
 # ----------------------------------------------------------------------
 
-def parse_timestamp_from_filename(stem: str) -> int:
-    """
-    Convert filename stem (e.g. '000069') to a numeric tick index.
-    """
-    return int(stem)
-
-
 def infer_sim_duration(root_dir: Path) -> int:
     """
-    Look at all timestamp filenames and infer the total simulation duration in ticks.
+    Look at all *_preds.yaml timestamp filenames and infer max tick index.
     Returns the maximum tick index found.
     """
     max_idx = 0
     for vehicle_dir in root_dir.iterdir():
         if not vehicle_dir.is_dir():
             continue
-        for yaml_path in vehicle_dir.glob("*.yaml"):
+        for preds_path in vehicle_dir.glob("*_preds.yaml"):
             try:
-                idx = parse_timestamp_from_filename(yaml_path.stem)
+                idx = parse_timestamp_from_preds_filename(preds_path)
                 if idx > max_idx:
                     max_idx = idx
             except ValueError:
@@ -289,44 +408,46 @@ def process_vehicle_folder(
     vehicle_dir: Path,
     output_dir: Path,
     attack_scheduler: AttackScheduler,
-    dt: float,
 ) -> None:
     veh_id = vehicle_dir.name
 
-    yaml_files = sorted(
-        [p for p in vehicle_dir.glob("*.yaml") if p.is_file()],
-        key=lambda p: p.stem,
-    )
+    preds_files = list_preds_paths(vehicle_dir)
+    benign_dir = output_dir / "benign"
+    malicious_dir = output_dir / "malicious"
+    benign_dir.mkdir(parents=True, exist_ok=True)
+    malicious_dir.mkdir(parents=True, exist_ok=True)
 
-    for yaml_path in tqdm(yaml_files, desc=f"{veh_id}", leave=False, unit="frame"):
-        sim_tick = parse_timestamp_from_filename(yaml_path.stem)
+    for preds_path in tqdm(preds_files, desc=f"{veh_id}", leave=False, unit="frame"):
+        sim_tick = parse_timestamp_from_preds_filename(preds_path)
 
-        frame = load_yaml(yaml_path)
+        frame = load_yaml(preds_path)
 
         # Build benign CPM
-        cpm = build_cpm(
+        benign_cpm = build_cpm_from_preds_frame(
             frame=frame,
+            vehicle_id=veh_id,
+            timestamp=sim_tick,
             cpm_type="benign",
-            attack=None,
         )
+        malicious_cpm = copy.deepcopy(benign_cpm)
 
-        cpm["timestamp"] = sim_tick
-        
         # Query random schedule
         active_attacks = attack_scheduler.get_attacks_for(veh_id, sim_tick)
 
-        # Apply attacks
-        cpm = apply_attacks_to_cpm(
-            cpm=cpm,
+        # Apply one selected attack (if any).
+        malicious_cpm = apply_attacks_to_cpm(
+            cpm=malicious_cpm,
             vehicle_id=veh_id,
             timestamp=sim_tick,
             active_attacks=active_attacks,
         )
 
-        # Save as <vehicle_id>_<timestamp>.yaml
-        out_name = f"{veh_id}_{yaml_path.stem}.yaml"
-        out_path = output_dir / out_name
-        save_yaml(cpm, out_path)
+        benign_cpm["detected_objects"] = vehicles_to_detected_objects(benign_cpm.get("detected_vehicles", []))
+        malicious_cpm["detected_objects"] = vehicles_to_detected_objects(malicious_cpm.get("detected_vehicles", []))
+
+        out_name = f"{veh_id}_{sim_tick:06d}.yaml"
+        save_yaml(benign_cpm, benign_dir / out_name)
+        save_yaml(malicious_cpm, malicious_dir / out_name)
 
 
 def run_simulation(
@@ -364,6 +485,14 @@ def run_simulation(
         "dt": dt,
         "lambda_attacks": lambda_attacks,
         "mean_duration": mean_duration,
+        "attack_type_probs": attack_type_probs,
+        "source_file_pattern": "*_preds.yaml",
+        "source_object_field": "detected_objects",
+        "one_attack_per_cpm": True,
+        "outputs": {
+            "benign_subdir": "benign",
+            "malicious_subdir": "malicious",
+        },
         "seed": seed,
         "sim_duration_ticks": sim_duration_ticks,
         "vehicles": {},
@@ -394,7 +523,6 @@ def run_simulation(
             vehicle_dir=vehicle_dir,
             output_dir=output_dir,
             attack_scheduler=attack_scheduler,
-            dt=dt,
         )
 
 
