@@ -66,15 +66,12 @@ def process_single_simulation(
     ) = task
 
     rel_path = sim_dir.relative_to(parent_root)
-    if repeat_idx > 0:
-        out_dir = parent_output / rel_path / f"run_{repeat_idx:03d}"
-        run_label = f"{rel_path} [run_{repeat_idx:03d}]"
-    else:
-        out_dir = parent_output / rel_path
-        run_label = str(rel_path)
+    out_dir = parent_output / rel_path
+    run_label = f"{rel_path} [repeat={repeat_idx:03d}]"
+    config_marker = out_dir / f"simulation_config_r{repeat_idx:03d}.yaml"
 
     try:
-        if out_dir.exists():
+        if config_marker.exists():
             return (run_label, True)
 
         sim_seed = None
@@ -89,6 +86,7 @@ def process_single_simulation(
             mean_duration=mean_duration,
             attack_type_probs=attack_type_probs,
             seed=sim_seed,
+            repeat_idx=repeat_idx,
         )
         return (run_label, True)
     except Exception:

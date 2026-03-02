@@ -28,12 +28,12 @@ class RemoveObjectAttack(Attack):
 
         target_ids_set = set(target_ids)
 
-        removed_objects: Dict[int, Dict[str, Any]] = {}
+        removed_objects: Dict[Any, Dict[str, Any]] = {}
         kept: List[Dict[str, Any]] = []
         for vehicle in vehicles:
             vehicle_id = vehicle.get("id")
             if vehicle_id in target_ids_set:
-                removed_objects[int(vehicle_id)] = vehicle
+                removed_objects[vehicle_id] = vehicle
             else:
                 kept.append(vehicle)
 

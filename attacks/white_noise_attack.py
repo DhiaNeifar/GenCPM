@@ -35,7 +35,7 @@ class WhiteNoiseAttack(Attack):
 
         target_ids_set = set(target_ids)
 
-        ground_truth: Dict[int, Dict[str, Any]] = {}
+        ground_truth: Dict[Any, Dict[str, Any]] = {}
         altered_fields: List[str] = []
 
         for vehicle in vehicles:
@@ -46,7 +46,13 @@ class WhiteNoiseAttack(Attack):
             location = vehicle.setdefault("location", {})
             orientation = vehicle.setdefault("orientation", {})
 
-            ground_truth[int(vehicle_id)] = {
+            gt_key: Any
+            try:
+                gt_key = int(str(vehicle_id))
+            except (TypeError, ValueError):
+                gt_key = vehicle_id
+
+            ground_truth[gt_key] = {
                 "location": dict(location),
                 "orientation": dict(orientation),
             }

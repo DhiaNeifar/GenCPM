@@ -65,5 +65,6 @@ python -m unittest discover -s tests -p "test_*.py" -v
 
 ## Notes
 
-- `run_all_simulations.py` and `run_simulations_parallel.py` skip simulations whose output folder already exists.
+- `run_all_simulations.py` skips simulations whose output folder already exists.
+- `run_simulations_parallel.py` writes all repeats into the same scenario folder and uses repeat-indexed filenames (e.g., `r000_vehicle_000000.yaml`). A repeat is skipped only if its matching `simulation_config_rXXX.yaml` already exists.
 - On Windows multiprocessing, worker functions must be top-level (already handled in the current code).

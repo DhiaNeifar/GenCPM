@@ -19,11 +19,13 @@ class AddObjectAttack(Attack):
         radius_min, radius_max = self.params.get("radius_range", (5.0, 20.0))
         z_offset = float(self.params.get("z_offset", 0.0))
 
-        existing_ids = {
-            int(v.get("id"))
-            for v in vehicles
-            if isinstance(v.get("id"), (int, float))
-        }
+        existing_ids = set()
+        for vehicle in vehicles:
+            raw_id = vehicle.get("id")
+            try:
+                existing_ids.add(int(str(raw_id)))
+            except (TypeError, ValueError):
+                continue
 
         extent_samples: List[Tuple[float, float, float]] = []
         avg_speed = 0.0
@@ -48,13 +50,12 @@ class AddObjectAttack(Attack):
 
         avg_extent = {"x": avg_ex, "y": avg_ey, "z": avg_ez}
 
-        new_ids: List[int] = []
-        fake_objects: Dict[int, Dict[str, Any]] = {}
+        new_ids: List[Any] = []
+        fake_objects: Dict[Any, Dict[str, Any]] = {}
 
         for _ in range(num_objects):
             new_id = generate_unused_id(existing_ids)
             existing_ids.add(new_id)
-            new_ids.append(new_id)
 
             radius = random.uniform(radius_min, radius_max)
             theta = random.uniform(0.0, 2 * math.pi)
@@ -63,8 +64,9 @@ class AddObjectAttack(Attack):
             z = float(ego.get("z", 0.0) + z_offset)
             yaw = math.degrees(theta)
 
+            output_id: Any = str(new_id)
             obj = {
-                "id": new_id,
+                "id": output_id,
                 "location": {"x": x, "y": y, "z": z},
                 "center": {"x": x, "y": y, "z": z},
                 "orientation": {"roll": 0.0, "pitch": 0.0, "yaw": yaw},
@@ -77,7 +79,8 @@ class AddObjectAttack(Attack):
             }
 
             vehicles.append(obj)
-            fake_objects[new_id] = obj
+            new_ids.append(output_id)
+            fake_objects[output_id] = obj
 
         cpm["detected_vehicles"] = vehicles
 

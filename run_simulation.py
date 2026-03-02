@@ -21,11 +21,10 @@ Skeleton:
         - build benign CPM
         - query AttackScheduler for active attacks
         - apply attack modifications
-        - save CPM as <vehicle_id>_<timestamp>.yaml
+        - save CPM as <vehicle_id>_<timestamp>.yaml (or repeat-indexed name in parallel mode)
 """
 
 import argparse
-import copy
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -232,11 +231,8 @@ def extract_detected_vehicles_from_preds(frame: Dict[str, Any]) -> List[Dict[str
     for key, obj in detected.items():
         if not isinstance(obj, dict):
             continue
-        vid = obj.get("id", obj.get("object_id", key))
-        try:
-            vid = int(str(vid))
-        except ValueError:
-            vid = str(vid)
+        # Normalize IDs to string so generated CPM labels are consistent.
+        vid = str(obj.get("id", obj.get("object_id", key)))
 
         lx, ly, lz = _to_float3(obj.get("location"), (0.0, 0.0, 0.0))
         cx, cy, cz = _to_float3(obj.get("center"), (lx, ly, lz))
@@ -408,46 +404,44 @@ def process_vehicle_folder(
     vehicle_dir: Path,
     output_dir: Path,
     attack_scheduler: AttackScheduler,
+    repeat_idx: Optional[int] = None,
 ) -> None:
     veh_id = vehicle_dir.name
 
     preds_files = list_preds_paths(vehicle_dir)
-    benign_dir = output_dir / "benign"
-    malicious_dir = output_dir / "malicious"
-    benign_dir.mkdir(parents=True, exist_ok=True)
-    malicious_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     for preds_path in tqdm(preds_files, desc=f"{veh_id}", leave=False, unit="frame"):
         sim_tick = parse_timestamp_from_preds_filename(preds_path)
 
         frame = load_yaml(preds_path)
 
-        # Build benign CPM
-        benign_cpm = build_cpm_from_preds_frame(
+        # Build CPM and then label it benign/malicious based on active attacks.
+        cpm = build_cpm_from_preds_frame(
             frame=frame,
             vehicle_id=veh_id,
             timestamp=sim_tick,
             cpm_type="benign",
         )
-        malicious_cpm = copy.deepcopy(benign_cpm)
 
         # Query random schedule
         active_attacks = attack_scheduler.get_attacks_for(veh_id, sim_tick)
 
         # Apply one selected attack (if any).
-        malicious_cpm = apply_attacks_to_cpm(
-            cpm=malicious_cpm,
+        cpm = apply_attacks_to_cpm(
+            cpm=cpm,
             vehicle_id=veh_id,
             timestamp=sim_tick,
             active_attacks=active_attacks,
         )
 
-        benign_cpm["detected_objects"] = vehicles_to_detected_objects(benign_cpm.get("detected_vehicles", []))
-        malicious_cpm["detected_objects"] = vehicles_to_detected_objects(malicious_cpm.get("detected_vehicles", []))
+        cpm["detected_objects"] = vehicles_to_detected_objects(cpm.get("detected_vehicles", []))
 
-        out_name = f"{veh_id}_{sim_tick:06d}.yaml"
-        save_yaml(benign_cpm, benign_dir / out_name)
-        save_yaml(malicious_cpm, malicious_dir / out_name)
+        if repeat_idx is None:
+            out_name = f"{veh_id}_{sim_tick:06d}.yaml"
+        else:
+            out_name = f"r{repeat_idx:03d}_{veh_id}_{sim_tick:06d}.yaml"
+        save_yaml(cpm, output_dir / out_name)
 
 
 def run_simulation(
@@ -458,6 +452,7 @@ def run_simulation(
     mean_duration: float,
     attack_type_probs: Dict[str, float],
     seed: Optional[int] = None,
+    repeat_idx: Optional[int] = None,
 ) -> None:
     if seed is not None:
         random.seed(seed)
@@ -490,10 +485,12 @@ def run_simulation(
         "source_object_field": "detected_objects",
         "one_attack_per_cpm": True,
         "outputs": {
-            "benign_subdir": "benign",
-            "malicious_subdir": "malicious",
+            "single_output_dir": ".",
+            "label_field": "cpm_type",
+            "label_values": ["benign", "malicious"],
         },
         "seed": seed,
+        "repeat_idx": repeat_idx,
         "sim_duration_ticks": sim_duration_ticks,
         "vehicles": {},
     }
@@ -509,7 +506,10 @@ def run_simulation(
             for iv in intervals
         ]
 
-    config_path = output_dir / "simulation_config.yaml"
+    if repeat_idx is None:
+        config_path = output_dir / "simulation_config.yaml"
+    else:
+        config_path = output_dir / f"simulation_config_r{repeat_idx:03d}.yaml"
     save_yaml(sim_config, config_path)
 
     # 3) create scheduler and generate CPMs
@@ -523,6 +523,7 @@ def run_simulation(
             vehicle_dir=vehicle_dir,
             output_dir=output_dir,
             attack_scheduler=attack_scheduler,
+            repeat_idx=repeat_idx,
         )
 
 
