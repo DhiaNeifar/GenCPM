@@ -170,9 +170,9 @@ def parse_args() -> argparse.Namespace:
                         help="Attack start rate (attacks per second) per vehicle (default: 0.2).")
     parser.add_argument("--mean-duration", type=float, default=5.0,
                         help="Mean attack duration in seconds (default: 5.0).")
-    parser.add_argument("--repeats", type=int, default=1,
+    parser.add_argument("--repeats", type=int, default=2,
                         help="Number of runs per scenario (default: 1).")
-    parser.add_argument("--seed", type=int, default=None,
+    parser.add_argument("--seed", type=int, default=42,
                         help="Base random seed (default: None).")
     parser.add_argument("--workers", type=int, default=None,
                         help="Number of parallel workers (default: CPU count - 1).")
