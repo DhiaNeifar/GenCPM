@@ -1,0 +1,678 @@
+[
+ {
+  "name": "param:CG:k3:num_ghosts=1",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "num_ghosts": 1
+  },
+  "sweeps": [
+   {
+    "param": "num_ghosts",
+    "value": 1
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:num_ghosts=2",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {},
+  "sweeps": [
+   {
+    "param": "num_ghosts",
+    "value": 2
+   },
+   {
+    "param": "lane_offset_m",
+    "value": 3.5
+   },
+   {
+    "param": "longitudinal_m",
+    "value": 10.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:num_ghosts=4",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "num_ghosts": 4
+  },
+  "sweeps": [
+   {
+    "param": "num_ghosts",
+    "value": 4
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:num_ghosts=8",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "num_ghosts": 8
+  },
+  "sweeps": [
+   {
+    "param": "num_ghosts",
+    "value": 8
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:lane_offset_m=0.0",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "lane_offset": 0.0
+  },
+  "sweeps": [
+   {
+    "param": "lane_offset_m",
+    "value": 0.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:lane_offset_m=1.75",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "lane_offset": 1.75
+  },
+  "sweeps": [
+   {
+    "param": "lane_offset_m",
+    "value": 1.75
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:lane_offset_m=7.0",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "lane_offset": 7.0
+  },
+  "sweeps": [
+   {
+    "param": "lane_offset_m",
+    "value": 7.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:longitudinal_m=0.0",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "along": 0.0
+  },
+  "sweeps": [
+   {
+    "param": "longitudinal_m",
+    "value": 0.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:longitudinal_m=5.0",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "along": 5.0
+  },
+  "sweeps": [
+   {
+    "param": "longitudinal_m",
+    "value": 5.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CG:k3:longitudinal_m=20.0",
+  "group": "param",
+  "attack": "CG",
+  "k": 3,
+  "params": {
+   "along": 20.0
+  },
+  "sweeps": [
+   {
+    "param": "longitudinal_m",
+    "value": 20.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CSUP:k3:targets=1",
+  "group": "param",
+  "attack": "CSUP",
+  "k": 3,
+  "params": {
+   "num_targets": 1
+  },
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 1
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CSUP:k3:targets=2",
+  "group": "param",
+  "attack": "CSUP",
+  "k": 3,
+  "params": {},
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 2
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CSUP:k3:targets=4",
+  "group": "param",
+  "attack": "CSUP",
+  "k": 3,
+  "params": {
+   "num_targets": 4
+  },
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 4
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CSUP:k3:targets=8",
+  "group": "param",
+  "attack": "CSUP",
+  "k": 3,
+  "params": {
+   "num_targets": 8
+  },
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 8
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:rate_mps=0.5",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "rate_mps": 0.5
+  },
+  "sweeps": [
+   {
+    "param": "rate_mps",
+    "value": 0.5
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:rate_mps=1.5",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {},
+  "sweeps": [
+   {
+    "param": "rate_mps",
+    "value": 1.5
+   },
+   {
+    "param": "targets",
+    "value": 4
+   },
+   {
+    "param": "cap_m",
+    "value": 8.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:rate_mps=3.0",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "rate_mps": 3.0
+  },
+  "sweeps": [
+   {
+    "param": "rate_mps",
+    "value": 3.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:rate_mps=6.0",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "rate_mps": 6.0
+  },
+  "sweeps": [
+   {
+    "param": "rate_mps",
+    "value": 6.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:targets=1",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "num_targets": 1
+  },
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 1
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:targets=2",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "num_targets": 2
+  },
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 2
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:targets=8",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "num_targets": 8
+  },
+  "sweeps": [
+   {
+    "param": "targets",
+    "value": 8
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:cap_m=2.0",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "cap_m": 2.0
+  },
+  "sweeps": [
+   {
+    "param": "cap_m",
+    "value": 2.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:cap_m=4.0",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "cap_m": 4.0
+  },
+  "sweeps": [
+   {
+    "param": "cap_m",
+    "value": 4.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CCSD:k3:cap_m=16.0",
+  "group": "param",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {
+   "cap_m": 16.0
+  },
+  "sweeps": [
+   {
+    "param": "cap_m",
+    "value": 16.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:noise_m=0.5",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "mean": 0.5,
+   "std": 0.25
+  },
+  "sweeps": [
+   {
+    "param": "noise_m",
+    "value": 0.5
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:noise_m=1.0",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "mean": 1.0,
+   "std": 0.5
+  },
+  "sweeps": [
+   {
+    "param": "noise_m",
+    "value": 1.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:noise_m=2.0",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "mean": 2.0,
+   "std": 1.0
+  },
+  "sweeps": [
+   {
+    "param": "noise_m",
+    "value": 2.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:noise_m=3.0",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {},
+  "sweeps": [
+   {
+    "param": "noise_m",
+    "value": 3.0
+   },
+   {
+    "param": "yaw_noise_deg",
+    "value": 15
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:noise_m=6.0",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "mean": 6.0,
+   "std": 3.0
+  },
+  "sweeps": [
+   {
+    "param": "noise_m",
+    "value": 6.0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:yaw_noise_deg=0",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "yaw_mean": 0.0,
+   "yaw_std": 0.0
+  },
+  "sweeps": [
+   {
+    "param": "yaw_noise_deg",
+    "value": 0
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:yaw_noise_deg=5",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "yaw_mean": 5.0,
+   "yaw_std": 2.6666666666666665
+  },
+  "sweeps": [
+   {
+    "param": "yaw_noise_deg",
+    "value": 5
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:yaw_noise_deg=30",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "yaw_mean": 30.0,
+   "yaw_std": 16.0
+  },
+  "sweeps": [
+   {
+    "param": "yaw_noise_deg",
+    "value": 30
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "param:CISP:k3:yaw_noise_deg=60",
+  "group": "param",
+  "attack": "CISP",
+  "k": 3,
+  "params": {
+   "yaw_mean": 60.0,
+   "yaw_std": 32.0
+  },
+  "sweeps": [
+   {
+    "param": "yaw_noise_deg",
+    "value": 60
+   }
+  ],
+  "common": true
+ },
+ {
+  "name": "nattack:CCSD:k1:default",
+  "group": "nattack",
+  "attack": "CCSD",
+  "k": 1,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CCSD:k2:default",
+  "group": "nattack",
+  "attack": "CCSD",
+  "k": 2,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CCSD:k3:default",
+  "group": "nattack",
+  "attack": "CCSD",
+  "k": 3,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CCSD:k4:default",
+  "group": "nattack",
+  "attack": "CCSD",
+  "k": 4,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CG:k1:default",
+  "group": "nattack",
+  "attack": "CG",
+  "k": 1,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CG:k2:default",
+  "group": "nattack",
+  "attack": "CG",
+  "k": 2,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CG:k3:default",
+  "group": "nattack",
+  "attack": "CG",
+  "k": 3,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CG:k4:default",
+  "group": "nattack",
+  "attack": "CG",
+  "k": 4,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CISP:k1:default",
+  "group": "nattack",
+  "attack": "CISP",
+  "k": 1,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CISP:k2:default",
+  "group": "nattack",
+  "attack": "CISP",
+  "k": 2,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CISP:k3:default",
+  "group": "nattack",
+  "attack": "CISP",
+  "k": 3,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CISP:k4:default",
+  "group": "nattack",
+  "attack": "CISP",
+  "k": 4,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CSUP:k1:default",
+  "group": "nattack",
+  "attack": "CSUP",
+  "k": 1,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CSUP:k2:default",
+  "group": "nattack",
+  "attack": "CSUP",
+  "k": 2,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CSUP:k3:default",
+  "group": "nattack",
+  "attack": "CSUP",
+  "k": 3,
+  "params": {},
+  "common": true
+ },
+ {
+  "name": "nattack:CSUP:k4:default",
+  "group": "nattack",
+  "attack": "CSUP",
+  "k": 4,
+  "params": {},
+  "common": true
+ }
+]

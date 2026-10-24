@@ -1,0 +1,24 @@
+# Only the code of the repository is versioned. Everything else in this folder (datasets, work folders, generated
+# CPMs, results, the paper, notes) is ignored, so no data or local file can be published by accident.
+/*
+!/gencpm/
+!/configs/
+!/reproduce/
+!/tests/
+!/docs/
+!/README.md
+!/LICENSE
+!/pyproject.toml
+!/setup.py
+!/environment.yml
+!/.gitignore
+
+# local settings and build output inside the versioned folders
+configs/paths.yaml
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+build/
+dist/
+.pytest_cache/

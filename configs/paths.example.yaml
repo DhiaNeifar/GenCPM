@@ -1,0 +1,17 @@
+# Copy this file to configs/paths.yaml (git-ignored) and set the locations on your machine.
+# Every script reads its paths from here; no path is stored anywhere else in the repository.
+
+# Released CARLA perception frames, PointPillars detections (Hugging Face: AdverCPM).
+# Layout: <carla_frames>/Town*/<episode>/<vehicle>/<frame>_preds.yaml and <frame>_score.npy
+carla_frames: /path/to/AdverCPM/frames/pointpillars
+
+# Optional: the same frames with SECOND detections (Table 9). Leave empty to skip.
+carla_frames_second:            # e.g. /path/to/AdverCPM/frames/second
+
+# Optional: CooperScene frames in the same layout (Table 10), produced with
+#   python -m gencpm infer ... && python -m gencpm cooperscene-layout ...   (see docs/cooperscene.md)
+cooperscene_frames:
+
+# Where caches, generated CPMs, trained defenses, and results are written.
+# The full CARLA reproduction needs about 30 GB.
+work: /path/to/gencpm_work

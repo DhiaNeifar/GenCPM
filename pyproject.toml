@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "pybind11>=2.10"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gencpm"
+version = "1.0.0"
+description = "Adversarial Cooperative Perception Messages: CPM generation, attacks, defenses, and end-to-end evaluation"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy>=1.23,<2",
+    "pandas>=1.5",
+    "pyyaml>=6.0",
+    "tqdm",
+    "scikit-learn>=1.2",
+    "torch>=2.0",
+    "matplotlib>=3.6",
+    "scipy",
+    "huggingface_hub>=0.20",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "shapely>=2.0"]
+perception = ["open3d"]   # plus OpenCOOD, installed separately (see docs/cooperscene.md)
+
+[project.scripts]
+gencpm = "gencpm.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["gencpm*"]

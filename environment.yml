@@ -1,0 +1,20 @@
+# conda env create -f environment.yml && conda activate gencpm && pip install -e ".[test]"
+name: gencpm
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pybind11>=2.10
+  - pip:
+      - numpy>=1.23,<2
+      - pandas>=2.0
+      - pyyaml>=6.0
+      - tqdm
+      - scikit-learn>=1.2
+      - torch>=2.0        # for a GPU build, install torch first following pytorch.org
+      - matplotlib>=3.6
+      - scipy
+      - huggingface_hub>=0.20
+      - shapely>=2.0
+      - pytest
